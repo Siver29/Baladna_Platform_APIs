@@ -1,0 +1,633 @@
+{
+  "info": {
+    "name": "Baladna API",
+    "description": "Civic issue reporting REST API. Base URL: http://localhost:8000/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" },
+    { "key": "citizen_token", "value": "" },
+    { "key": "employee_token", "value": "" },
+    { "key": "admin_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mohammad Ahmad\",\n  \"email\": \"mohammad@example.com\",\n  \"phone\": \"+9647000000000\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"area_id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) {",
+                  "  const role = json.data.user.role;",
+                  "  if (role === 'citizen') pm.collectionVariables.set('citizen_token', json.data.token);",
+                  "  if (role === 'employee') pm.collectionVariables.set('employee_token', json.data.token);",
+                  "  if (role === 'admin') pm.collectionVariables.set('admin_token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@baladna.test\",\n  \"password\": \"password\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/auth/logout"
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+9647001111111\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reference Data",
+      "item": [
+        {
+          "name": "List Areas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/areas"
+          }
+        },
+        {
+          "name": "Areas by parent",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/areas?parent_id=1"
+          }
+        },
+        {
+          "name": "List Agencies",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/agencies"
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/categories"
+          }
+        },
+        {
+          "name": "Categories by agency",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/categories?agency_id=1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citizen Reports",
+      "item": [
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports?page=1&per_page=10&status=submitted"
+          }
+        },
+        {
+          "name": "Create Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 1,\n  \"area_id\": 2,\n  \"title\": \"Large pothole in the main street\",\n  \"description\": \"The pothole is dangerous, especially at night.\",\n  \"address\": \"Main Street, opposite the school\",\n  \"latitude\": 33.3152,\n  \"longitude\": 44.3661\n}"
+            }
+          }
+        },
+        {
+          "name": "Show Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1"
+          }
+        },
+        {
+          "name": "Update Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated pothole title\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/cancel"
+          }
+        },
+        {
+          "name": "My Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/my-reports"
+          }
+        },
+        {
+          "name": "Upload Report Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "images[]", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/confirm"
+          }
+        },
+        {
+          "name": "Remove Confirmation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/confirm"
+          }
+        },
+        {
+          "name": "Report History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/history"
+          }
+        },
+        {
+          "name": "Review Resolved Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/reports/1/review",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great work!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employee Reports",
+      "item": [
+        {
+          "name": "List Agency Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" }
+            ],
+            "url": "{{base_url}}/employee/reports"
+          }
+        },
+        {
+          "name": "Show Agency Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" }
+            ],
+            "url": "{{base_url}}/employee/reports/1"
+          }
+        },
+        {
+          "name": "Update Report Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" }
+            ],
+            "url": "{{base_url}}/employee/reports/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"note\": \"The maintenance team has started working on the issue.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Public Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" }
+            ],
+            "url": "{{base_url}}/employee/reports/1/public-note",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"The team is on site inspecting the issue.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Areas",
+          "item": [
+            {
+              "name": "List Areas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/areas"
+              }
+            },
+            {
+              "name": "Create Area",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/areas",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Zubair\",\n  \"parent_id\": 1\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Area",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/areas/1",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Zubair City\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete Area",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/areas/1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agencies",
+          "item": [
+            {
+              "name": "List Agencies",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/agencies"
+              }
+            },
+            {
+              "name": "Create Agency",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/agencies",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Municipality\",\n  \"description\": \"Handles city services.\",\n  \"email\": \"municipality@baladna.test\",\n  \"phone\": \"+9647000000000\"\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "List Categories",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/categories"
+              }
+            },
+            {
+              "name": "Create Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/categories",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Damaged road\",\n  \"description\": \"Road damage reports.\",\n  \"agency_id\": 1\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "List Users",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/users"
+              }
+            },
+            {
+              "name": "Create Employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+                ],
+                "url": "{{base_url}}/admin/users",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Employee\",\n  \"email\": \"employee2@baladna.test\",\n  \"password\": \"password\",\n  \"role\": \"employee\",\n  \"agency_id\": 1\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Employee to Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": "{{base_url}}/admin/reports/1/assign",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee_id\": 2\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Community",
+      "item": [
+        {
+          "name": "List Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts"
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Waste collection problem\",\n  \"content\": \"Waste has not been collected for several days.\",\n  \"area_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Show Post",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts/1"
+          }
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated post title\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts/1"
+          }
+        },
+        {
+          "name": "List Comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts/1/comments"
+          }
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/posts/1/comments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"The same issue exists on our street.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/comments/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated comment text.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizen_token}}" }
+            ],
+            "url": "{{base_url}}/comments/1"
+          }
+        }
+      ]
+    }
+  ]
+}
