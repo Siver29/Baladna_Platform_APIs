@@ -49,6 +49,15 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Anonymous Report Submission (Public)
+    |--------------------------------------------------------------------------
+    */
+
+    // Registered before the auth'd report routes so it does not collide with {report}.
+    Route::post('/reports/anonymous', [ReportController::class, 'storeAnonymous']);
+
+    /*
+    |--------------------------------------------------------------------------
     | Citizen Reports
     |--------------------------------------------------------------------------
     */

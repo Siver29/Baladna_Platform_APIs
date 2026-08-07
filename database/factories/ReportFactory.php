@@ -41,6 +41,19 @@ class ReportFactory extends Factory
         ];
     }
 
+    /**
+     * Create an anonymous report (no registered user, reporter info stored directly).
+     */
+    public function anonymous(): static
+    {
+        return $this->state(fn () => [
+            'user_id' => null,
+            'reporter_name' => fake()->name(),
+            'reporter_email' => fake()->safeEmail(),
+            'reporter_phone' => fake()->phoneNumber(),
+        ]);
+    }
+
     public function submitted(): static
     {
         return $this->state(fn () => ['status' => ReportStatus::Submitted]);

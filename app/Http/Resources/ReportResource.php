@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\MissingValue;
 
 class ReportResource extends JsonResource
 {
@@ -41,10 +42,25 @@ class ReportResource extends JsonResource
                 'id' => $this->agency->id,
                 'name' => $this->agency->name,
             ]),
-            'reporter' => $this->whenLoaded('user', fn () => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-            ]),
+            'reporter' => $this->when(
+                $this->relationLoaded('user') || $this->reporter_name !== null,
+                function () {
+                    if ($this->user) {
+                        return [
+                            'id' => $this->user->id,
+                            'name' => $this->user->name,
+                        ];
+                    }
+
+                    return [
+                        'id' => null,
+                        'name' => $this->reporter_name,
+                        'email' => $this->reporter_email,
+                        'phone' => $this->reporter_phone,
+                    ];
+                },
+                new MissingValue
+            ),
             'assigned_employee' => $this->whenLoaded('assignedEmployee', fn () => $this->assignedEmployee ? [
                 'id' => $this->assignedEmployee->id,
                 'name' => $this->assignedEmployee->name,

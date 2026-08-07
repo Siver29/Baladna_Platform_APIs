@@ -41,7 +41,7 @@ class ReportStatusService
     /**
      * Apply a status transition, persisting the change and a history record.
      */
-    public function transition(Report $report, ReportStatus $newStatus, User $actor, ?string $note = null): Report
+    public function transition(Report $report, ReportStatus $newStatus, ?User $actor = null, ?string $note = null): Report
     {
         if (! $this->canTransition($report, $newStatus)) {
             throw new InvalidArgumentException(
@@ -71,7 +71,7 @@ class ReportStatusService
 
             ReportStatusHistory::create([
                 'report_id' => $report->id,
-                'user_id' => $actor->id,
+                'user_id' => $actor?->id,
                 'old_status' => $oldStatus->value,
                 'new_status' => $newStatus->value,
                 'note' => $note,

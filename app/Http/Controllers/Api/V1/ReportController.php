@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\Priority;
 use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Report\StoreAnonymousReportRequest;
 use App\Http\Requests\Report\StoreReportImageRequest;
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Http\Requests\Report\StoreReportReviewRequest;
@@ -61,17 +62,39 @@ class ReportController extends Controller
     }
 
     /**
-     * Create a new report.
+     * Create a new report as an authenticated citizen.
      */
     public function store(StoreReportRequest $request): JsonResponse
     {
+        $report = $this->createReport($request, $request->user());
+
+        return $this->success(new ReportResource($report), 'Report created successfully.', 201);
+    }
+
+    /**
+     * Create a new report without authentication (anonymous reporter).
+     */
+    public function storeAnonymous(StoreAnonymousReportRequest $request): JsonResponse
+    {
+        $report = $this->createReport($request, null);
+
+        return $this->success(new ReportResource($report), 'Report submitted anonymously.', 201);
+    }
+
+    /**
+     * Shared creation routine for authenticated and anonymous reports.
+     */
+    private function createReport(StoreReportRequest|StoreAnonymousReportRequest $request, ?User $user): Report
+    {
         $category = Category::findOrFail($request->category_id);
-        $user = $request->user();
 
         $report = DB::transaction(function () use ($request, $category, $user) {
             $report = Report::create([
                 'reference_number' => $this->generateReferenceNumber(),
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
+                'reporter_name' => $request->reporter_name,
+                'reporter_email' => $request->reporter_email,
+                'reporter_phone' => $request->reporter_phone,
                 'category_id' => $request->category_id,
                 'area_id' => $request->area_id,
                 'agency_id' => $category->agency_id,
@@ -93,7 +116,7 @@ class ReportController extends Controller
 
             ReportStatusHistory::create([
                 'report_id' => $report->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'old_status' => null,
                 'new_status' => ReportStatus::Submitted->value,
                 'note' => 'Report submitted.',
@@ -104,7 +127,7 @@ class ReportController extends Controller
 
         $report->load(['category', 'area', 'agency', 'user', 'images']);
 
-        return $this->success(new ReportResource($report), 'Report created successfully.', 201);
+        return $report;
     }
 
     /**

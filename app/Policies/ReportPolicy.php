@@ -15,7 +15,7 @@ class ReportPolicy
     {
         return $user->isAdmin()
             || $user->isEmployee()
-            || $report->user_id === $user->id;
+            || ($report->user_id !== null && $report->user_id === $user->id);
     }
 
     /**
@@ -24,6 +24,7 @@ class ReportPolicy
     public function update(User $user, Report $report): bool
     {
         return $user->isCitizen()
+            && $report->user_id !== null
             && $report->user_id === $user->id
             && $report->status === ReportStatus::Submitted;
     }
@@ -34,6 +35,7 @@ class ReportPolicy
     public function cancel(User $user, Report $report): bool
     {
         return $user->isCitizen()
+            && $report->user_id !== null
             && $report->user_id === $user->id
             && in_array($report->status, [ReportStatus::Submitted, ReportStatus::UnderReview], true);
     }
@@ -43,7 +45,7 @@ class ReportPolicy
      */
     public function confirm(User $user, Report $report): bool
     {
-        return $user->isCitizen() && $report->user_id !== $user->id;
+        return $user->isCitizen() && $report->user_id !== null && $report->user_id !== $user->id;
     }
 
     /**
@@ -52,6 +54,7 @@ class ReportPolicy
     public function review(User $user, Report $report): bool
     {
         return $user->isCitizen()
+            && $report->user_id !== null
             && $report->user_id === $user->id
             && $report->status === ReportStatus::Resolved;
     }

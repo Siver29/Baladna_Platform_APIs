@@ -288,7 +288,59 @@ Returns a single category.
 
 # 3. 🧾 Citizen Reports
 
-All endpoints in this section require `auth:sanctum` (Bearer token).
+All endpoints in this section require `auth:sanctum` (Bearer token), **except** `POST /reports/anonymous` which is **public**.
+
+## POST `/reports/anonymous`
+**Role:** Public · **Auth:** No
+
+> Submit a report **without** registering/logging in. The reporter provides their own contact info, which is stored directly on the report (`user_id` stays `null`).
+
+**Form fields (multipart/form-data for images):**
+| Field | Required | Notes |
+|-------|----------|-------|
+| `reporter_name` | ✅ | max 255 |
+| `reporter_email` | ❌ | valid email |
+| `reporter_phone` | ❌ | max 255 |
+| `category_id` | ✅ | Must be an active category |
+| `area_id` | ✅ | |
+| `title` | ✅ | max 255 |
+| `description` | ✅ | max 5000 |
+| `address` | ❌ | max 500 |
+| `latitude` | ❌ | -90 to 90 |
+| `longitude` | ❌ | -180 to 180 |
+| `images[]` | ❌ | max 5, jpg/jpeg/png/webp, max 5MB |
+
+**Response (201):** the created report. `data.reporter` will be:
+```json
+{
+  "id": null,
+  "name": "Ali Hassan",
+  "email": "ali@example.com",
+  "phone": "+9647000000000"
+}
+```
+
+**React example:**
+```js
+const formData = new FormData();
+formData.append("reporter_name", name);
+formData.append("reporter_email", email);
+formData.append("reporter_phone", phone);
+formData.append("category_id", categoryId);
+formData.append("area_id", areaId);
+formData.append("title", title);
+formData.append("description", description);
+
+images.forEach((img) => formData.append("images[]", img));
+
+const res = await api.post("/reports/anonymous", formData, {
+  headers: { "Content-Type": "multipart/form-data" },
+});
+```
+
+> Note: Because anonymous reports have no registered user, they can **not** be updated, cancelled, or reviewed by the reporter later. They are managed by employees/admins only.
+
+---
 
 ## GET `/reports`
 **Role:** Authenticated · **Auth:** Bearer
