@@ -20,6 +20,7 @@ use App\Models\ReportImage;
 use App\Models\ReportStatusHistory;
 use App\Models\User;
 use App\Services\ReportStatusService;
+use App\Services\WebsiteStatsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +127,9 @@ class ReportController extends Controller
         });
 
         $report->load(['category', 'area', 'agency', 'user', 'images']);
+
+        // Refresh the public website statistics after a new report is submitted.
+        app(WebsiteStatsService::class)->refresh();
 
         return $report;
     }

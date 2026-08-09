@@ -342,6 +342,91 @@ const res = await api.post("/reports/anonymous", formData, {
 
 ---
 
+# 3.1 🌐 Website Landing Page (Public)
+
+These endpoints are **public** (no auth) and are meant to be displayed on the landing page. They return the latest anonymous reports and the website's status/statistics table.
+
+## GET `/website/latest-anonymous-reports`
+**Role:** Public · **Auth:** No
+
+Returns the **latest 6 anonymous reports** (ordered newest first). Only reports submitted without a registered user (`user_id = null`) are included.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Latest anonymous reports retrieved.",
+  "data": [
+    {
+      "id": 10,
+      "reference_number": "BLD-2026-000010",
+      "title": "Broken street light",
+      "description": "The street light has been broken for a week.",
+      "status": "submitted",
+      "priority": "normal",
+      "category": { "id": 1, "name": "Damaged roads" },
+      "area": { "id": 2, "name": "Karrada" },
+      "agency": { "id": 1, "name": "Municipality" },
+      "reporter": { "id": null, "name": "Ali Hassan", "email": "ali@example.com", "phone": "+9647000000000" },
+      "images": [],
+      "created_at": "2026-08-05T17:00:00Z"
+    }
+  ]
+}
+```
+
+**React example:**
+```js
+const res = await api.get("/website/latest-anonymous-reports");
+setReports(res.data.data);
+```
+
+---
+
+## GET `/website/stats`
+**Role:** Public · **Auth:** No
+
+Returns the website's status table containing aggregate counts. This table is updated automatically whenever a new report is submitted or a report is completed (resolved).
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Website statistics retrieved.",
+  "data": {
+    "total_reports": 120,
+    "resolved_reports": 45,
+    "pending_reports": 70,
+    "anonymous_reports": 30,
+    "active_categories": 8,
+    "active_areas": 12,
+    "active_agencies": 5,
+    "updated_at": "2026-08-05T17:00:00Z"
+  }
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `total_reports` | Total number of reports submitted |
+| `resolved_reports` | Reports with status `resolved` |
+| `pending_reports` | Reports still open (not resolved/rejected/cancelled) |
+| `anonymous_reports` | Reports submitted without a registered user |
+| `active_categories` | Number of active categories |
+| `active_areas` | Total number of areas |
+| `active_agencies` | Number of active agencies |
+| `updated_at` | When the stats were last refreshed |
+
+**React example:**
+```js
+const res = await api.get("/website/stats");
+setStats(res.data.data);
+```
+
+> These stats are stored in a single `website_stats` row and are recomputed automatically on new submissions and on report resolutions, so they stay fresh for the landing page.
+
+---
+
 ## GET `/reports`
 **Role:** Authenticated · **Auth:** Bearer
 

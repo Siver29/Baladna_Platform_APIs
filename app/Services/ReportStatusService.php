@@ -6,6 +6,7 @@ use App\Enums\ReportStatus;
 use App\Models\Report;
 use App\Models\ReportStatusHistory;
 use App\Models\User;
+use App\Models\WebsiteStat;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -49,7 +50,9 @@ class ReportStatusService
             );
         }
 
-        return DB::transaction(function () use ($report, $newStatus, $actor, $note) {
+        $wasResolved = $report->status === ReportStatus::Resolved;
+
+        $report = DB::transaction(function () use ($report, $newStatus, $actor, $note) {
             $oldStatus = $report->status;
 
             $report->status = $newStatus;
@@ -79,5 +82,12 @@ class ReportStatusService
 
             return $report;
         });
+
+        // Keep the public website statistics up to date when a report is completed.
+        if (! $wasResolved && $newStatus === ReportStatus::Resolved) {
+            app(WebsiteStatsService::class)->refresh();
+        }
+
+        return $report;
     }
 }

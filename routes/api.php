@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\EmployeeReportController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -49,12 +50,21 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Anonymous Report Submission (Public)
+| Anonymous Report Submission (Public)
     |--------------------------------------------------------------------------
     */
 
     // Registered before the auth'd report routes so it does not collide with {report}.
     Route::post('/reports/anonymous', [ReportController::class, 'storeAnonymous']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Website Landing Page (Public - no auth)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/website/latest-anonymous-reports', [WebsiteController::class, 'latestAnonymousReports']);
+    Route::get('/website/stats', [WebsiteController::class, 'stats']);
 
     /*
     |--------------------------------------------------------------------------
