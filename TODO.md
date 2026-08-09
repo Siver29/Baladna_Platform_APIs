@@ -11,3 +11,4 @@ Steps from approved plan:
 - [x] 7. Register public routes (no auth) in `routes/api.php`
 - [x] 8. Add feature tests for both endpoints
 - [x] 9. Run tests (all pass), then commit & push
+- [x] Commit & push complete (commit `771a3ef` on `main`)
