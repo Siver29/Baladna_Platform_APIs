@@ -955,4 +955,126 @@ const fullUrl = `http://localhost:8000/storage/${image.image_path}`;
 
 ---
 
+# 9. 🏙️ Area Suggestions
+
+## POST `/user-areas`
+**Role:** Authenticated · **Auth:** Bearer
+
+**Request body:**
+```json
+{
+  "name": "New Area",
+  "parent_id": 1
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Area suggestion submitted successfully.",
+  "data": {
+    "id": 10,
+    "name": "New Area",
+    "status": "pending",
+    "parent_id": 1,
+    "user_id": 5
+  }
+}
+```
+
+**React example:**
+```js
+const res = await api.post("/user-areas", { name: "New Area", parent_id: 1 });
+```
+
+---
+
+## GET `/user-areas`
+**Role:** Authenticated · **Auth:** Bearer
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    { "id": 1, "name": "Baghdad", "parent_id": null },
+    { "id": 2, "name": "Karrada", "parent_id": 1 }
+  ]
+}
+```
+
+**React example:**
+```js
+const res = await api.get("/user-areas");
+setAreas(res.data.data);
+```
+
+---
+
+## GET `/admin/area-suggestions`
+**Role:** Admin · **Auth:** Bearer
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    { "id": 10, "name": "New Area", "status": "pending", "user_id": 5 }
+  ]
+}
+```
+
+**React example:**
+```js
+const res = await api.get("/admin/area-suggestions");
+setSuggestions(res.data.data);
+```
+
+---
+
+## PATCH `/admin/area-suggestions/{area}/approve`
+**Role:** Admin · **Auth:** Bearer
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Area approved successfully.",
+  "data": {
+    "id": 10,
+    "name": "New Area",
+    "status": "approved"
+  }
+}
+```
+
+**React example:**
+```js
+await api.patch(`/admin/area-suggestions/${areaId}/approve`);
+```
+
+---
+
+## PATCH `/admin/area-suggestions/{area}/reject`
+**Role:** Admin · **Auth:** Bearer
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Area rejected successfully.",
+  "data": {
+    "id": 10,
+    "name": "New Area",
+    "status": "rejected"
+  }
+}
+```
+
+**React example:**
+```js
+await api.patch(`/admin/area-suggestions/${areaId}/reject`);
+```
+
 This covers 100% of the API. For the full setup and installation steps, see **`STUDENT_SETUP_GUIDE.md`**.

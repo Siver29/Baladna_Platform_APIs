@@ -21,6 +21,17 @@ class Area extends Model
     protected $fillable = [
         'name',
         'parent_id',
+        'status',
+        'user_id',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'status' => \App\Enums\AreaStatus::class,
     ];
 
     /**
@@ -39,9 +50,14 @@ class Area extends Model
         return $this->hasMany(self::class, 'parent_id');
     }
 
-    public function users(): HasMany
+    public function residents(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function reports(): HasMany

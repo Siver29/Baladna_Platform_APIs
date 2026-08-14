@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminAgencyController;
 use App\Http\Controllers\Api\V1\Admin\AdminAreaController;
+use App\Http\Controllers\Api\V1\Admin\AdminAreaSuggestionController;
 use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\EmployeeReportController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\UserAreaController;
 use App\Http\Controllers\Api\V1\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -122,6 +124,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
         Route::patch('/comments/{comment}', [CommentController::class, 'update']);
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+
+        Route::get('/user-areas', [UserAreaController::class, 'index']);
+        Route::post('/user-areas', [UserAreaController::class, 'store']);
     });
 
     /*
@@ -137,5 +142,9 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('users', AdminUserController::class);
 
         Route::patch('/reports/{report}/assign', [AdminReportController::class, 'assign']);
+
+        Route::get('/area-suggestions', [AdminAreaSuggestionController::class, 'index']);
+        Route::patch('/area-suggestions/{area}/approve', [AdminAreaSuggestionController::class, 'approve']);
+        Route::patch('/area-suggestions/{area}/reject', [AdminAreaSuggestionController::class, 'reject']);
     });
 });
