@@ -71,14 +71,17 @@ class AdminAreaController extends Controller
     /**
      * Delete an area, or refuse if it has dependents.
      */
-    public function destroy(Area $area): JsonResponse
+    public function destroy(Area $area)
     {
-        if ($area->reports()->exists() || $area->users()->exists()) {
-            return $this->error('Cannot delete an area that is referenced by reports or users.', 422);
+        if ($area->reports()->exists()) {
+            return $this->error(
+                'Cannot delete an area that is referenced by reports.',
+                422
+            );
         }
-
+    
         $area->delete();
-
-        return $this->success(null, 'Area deleted successfully.', 204);
+    
+        return response()->noContent();
     }
 }
