@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Report;
 
+use App\Enums\AreaStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateReportRequest extends FormRequest
 {
@@ -22,8 +24,8 @@ class UpdateReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['sometimes', 'integer', 'exists:categories,id'],
-            'area_id' => ['sometimes', 'integer', 'exists:areas,id'],
+            'category_id' => ['sometimes', 'integer', Rule::exists('categories', 'id')->where('is_active', true)],
+            'area_id' => ['sometimes', 'integer', Rule::exists('areas', 'id')->where('status', AreaStatus::APPROVED->value)],
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'string', 'max:5000'],
             'address' => ['nullable', 'string', 'max:500'],

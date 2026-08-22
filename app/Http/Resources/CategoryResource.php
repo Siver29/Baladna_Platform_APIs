@@ -23,6 +23,11 @@ class CategoryResource extends JsonResource
                 'id' => $this->agency->id,
                 'name' => $this->agency->name,
             ]),
+            'responsible_employee_id' => $this->responsible_employee_id,
+            'responsible_employee' => $this->whenLoaded('responsibleEmployee', fn () => $this->responsibleEmployee ? [
+                'id' => $this->responsibleEmployee->id,
+                'name' => $this->responsibleEmployee->name,
+            ] : null),
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toISOString(),
         ];

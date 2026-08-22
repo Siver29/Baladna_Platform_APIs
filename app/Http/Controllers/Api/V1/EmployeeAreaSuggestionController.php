@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1\Admin;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\AreaStatus;
 use App\Http\Controllers\Controller;
@@ -11,25 +11,26 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
 
-class AdminAreaSuggestionController extends Controller
+class EmployeeAreaSuggestionController extends Controller
 {
     use ApiResponse;
 
     /**
-     * List citizen area suggestions, pending ones by default.
+     * List citizen area suggestions with their approval state.
+     *
+     * Employees get a read-only view; only admins can approve or reject.
      */
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'status' => ['sometimes', new Enum(AreaStatus::class)],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $status = AreaStatus::tryFrom($validated['status'] ?? '') ?? AreaStatus::PENDING;
-
         $areas = Area::query()
             ->with(['parent', 'user'])
-            ->where('status', $status)
+            ->whereNotNull('user_id')
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->orderBy('created_at', 'desc')
             ->paginate($request->integer('per_page', 15));
 
@@ -46,26 +47,12 @@ class AdminAreaSuggestionController extends Controller
     }
 
     /**
-     * Approve an area suggestion.
+     * Show a single area suggestion and whether it was approved.
      */
-    public function approve(Area $area): JsonResponse
+    public function show(Area $area): JsonResponse
     {
-        $area->update(['status' => AreaStatus::APPROVED]);
-
         $area->load(['parent', 'user']);
 
-        return $this->success(new AreaResource($area), 'Area suggestion approved successfully.');
-    }
-
-    /**
-     * Reject an area suggestion.
-     */
-    public function reject(Area $area): JsonResponse
-    {
-        $area->update(['status' => AreaStatus::REJECTED]);
-
-        $area->load(['parent', 'user']);
-
-        return $this->success(new AreaResource($area), 'Area suggestion rejected successfully.');
+        return $this->success(new AreaResource($area));
     }
 }

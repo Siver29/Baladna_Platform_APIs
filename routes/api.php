@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CommentController;
+use App\Http\Controllers\Api\V1\EmployeeAreaSuggestionController;
 use App\Http\Controllers\Api\V1\EmployeeReportController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\ReportController;
@@ -102,9 +103,19 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'employee'])->prefix('employee')->group(function () {
         Route::get('/reports', [EmployeeReportController::class, 'index']);
+
+        // Citizen reviews. Registered before /reports/{report} so it cannot be
+        // captured by the wildcard.
+        Route::get('/reviews', [EmployeeReportController::class, 'reviews']);
+
         Route::get('/reports/{report}', [EmployeeReportController::class, 'show']);
+        Route::get('/reports/{report}/review', [EmployeeReportController::class, 'review']);
         Route::patch('/reports/{report}/status', [EmployeeReportController::class, 'updateStatus']);
         Route::post('/reports/{report}/public-note', [EmployeeReportController::class, 'addPublicNote']);
+
+        // Read-only view of citizen area suggestions and their approval state.
+        Route::get('/area-suggestions', [EmployeeAreaSuggestionController::class, 'index']);
+        Route::get('/area-suggestions/{area}', [EmployeeAreaSuggestionController::class, 'show']);
     });
 
     /*
@@ -127,6 +138,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/user-areas', [UserAreaController::class, 'index']);
         Route::post('/user-areas', [UserAreaController::class, 'store']);
+
+        // The citizen's own suggestions, showing whether each was approved.
+        Route::get('/my-area-suggestions', [UserAreaController::class, 'mySuggestions']);
     });
 
     /*

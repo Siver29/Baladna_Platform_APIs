@@ -21,7 +21,7 @@ class AdminCategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $categories = Category::query()
-            ->with('agency')
+            ->with('agency', 'responsibleEmployee')
             ->when($request->has('agency_id'), fn ($q) => $q->where('agency_id', $request->agency_id))
             ->when($request->has('active'), fn ($q) => $q->where('is_active', $request->boolean('active')))
             ->orderBy('name')
@@ -46,7 +46,7 @@ class AdminCategoryController extends Controller
     {
         $category = Category::create($request->validated());
 
-        return $this->success(new CategoryResource($category), 'Category created successfully.', 201);
+        return $this->success(new CategoryResource($category->load('agency', 'responsibleEmployee')), 'Category created successfully.', 201);
     }
 
     /**
@@ -54,7 +54,7 @@ class AdminCategoryController extends Controller
      */
     public function show(Category $category): JsonResponse
     {
-        $category->load('agency');
+        $category->load('agency', 'responsibleEmployee');
 
         return $this->success(new CategoryResource($category));
     }
@@ -66,7 +66,7 @@ class AdminCategoryController extends Controller
     {
         $category->update($request->validated());
 
-        return $this->success(new CategoryResource($category), 'Category updated successfully.');
+        return $this->success(new CategoryResource($category->load('agency', 'responsibleEmployee')), 'Category updated successfully.');
     }
 
     /**

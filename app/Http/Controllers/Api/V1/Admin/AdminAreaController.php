@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Enums\AreaStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAreaRequest;
 use App\Http\Requests\Admin\UpdateAreaRequest;
@@ -21,8 +22,11 @@ class AdminAreaController extends Controller
     public function index(Request $request): JsonResponse
     {
         $areas = Area::query()
-            ->with('parent')
-            ->when($request->has('parent_id'), fn ($q) => $q->where('parent_id', $request->parent_id))
+            ->with(['parent', 'user'])
+            ->when($request->has('parent_id'), fn ($q) => $request->parent_id === ''
+                ? $q->whereNull('parent_id')
+                : $q->where('parent_id', $request->parent_id))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->orderBy('name')
             ->paginate($request->integer('per_page', 15));
 
@@ -43,7 +47,11 @@ class AdminAreaController extends Controller
      */
     public function store(StoreAreaRequest $request): JsonResponse
     {
-        $area = Area::create($request->validated());
+        // Areas an admin creates are live immediately; only citizen
+        // suggestions go through the pending queue.
+        $area = Area::create(array_merge($request->validated(), [
+            'status' => AreaStatus::APPROVED,
+        ]));
 
         return $this->success(new AreaResource($area), 'Area created successfully.', 201);
     }
@@ -63,15 +71,21 @@ class AdminAreaController extends Controller
      */
     public function update(UpdateAreaRequest $request, Area $area): JsonResponse
     {
-        $area->update($request->validated());
+        $data = $request->validated();
 
-        return $this->success(new AreaResource($area), 'Area updated successfully.');
+        if (array_key_exists('parent_id', $data) && (int) $data['parent_id'] === $area->id) {
+            return $this->error('An area cannot be its own parent.', 422);
+        }
+
+        $area->update($data);
+
+        return $this->success(new AreaResource($area->load('parent')), 'Area updated successfully.');
     }
 
     /**
      * Delete an area, or refuse if it has dependents.
      */
-    public function destroy(Area $area)
+    public function destroy(Area $area): JsonResponse
     {
         if ($area->reports()->exists()) {
             return $this->error(
@@ -79,9 +93,23 @@ class AdminAreaController extends Controller
                 422
             );
         }
-    
+
+        if ($area->posts()->exists()) {
+            return $this->error(
+                'Cannot delete an area that is referenced by community posts.',
+                422
+            );
+        }
+
+        if ($area->children()->exists()) {
+            return $this->error(
+                'Cannot delete an area that has sub-areas. Delete or move them first.',
+                422
+            );
+        }
+
         $area->delete();
-    
-        return response()->noContent();
+
+        return $this->success(null, 'Area deleted successfully.', 204);
     }
 }

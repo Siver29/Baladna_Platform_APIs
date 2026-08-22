@@ -15,7 +15,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $categories = Category::query()
-            ->with('agency')
+            ->with('agency', 'responsibleEmployee')
             ->when($request->has('agency_id'), fn ($q) => $q->where('agency_id', $request->agency_id))
             ->when($request->has('active'), fn ($q) => $q->where('is_active', $request->boolean('active')))
             ->where('is_active', true)
@@ -40,7 +40,7 @@ class CategoryController extends Controller
             ], 404);
         }
 
-        $category->load('agency');
+        $category->load('agency', 'responsibleEmployee');
 
         return response()->json([
             'success' => true,

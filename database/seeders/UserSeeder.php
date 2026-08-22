@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Role;
 use App\Models\Agency;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +28,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        User::updateOrCreate(
+        $roadEmployee = User::updateOrCreate(
             ['email' => 'employee@baladna.test'],
             [
                 'name' => 'Road Employee',
@@ -37,6 +38,12 @@ class UserSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        // Reports filed under "Damaged road" go straight to this employee.
+        if ($roadAgency) {
+            Category::where('agency_id', $roadAgency->id)
+                ->update(['responsible_employee_id' => $roadEmployee->id]);
+        }
 
         User::updateOrCreate(
             ['email' => 'citizen@baladna.test'],

@@ -19,6 +19,7 @@ use App\Models\ReportConfirmation;
 use App\Models\ReportImage;
 use App\Models\ReportStatusHistory;
 use App\Models\User;
+use App\Services\ReportAssignmentService;
 use App\Services\ReportStatusService;
 use App\Services\WebsiteStatsService;
 use Illuminate\Http\JsonResponse;
@@ -123,10 +124,13 @@ class ReportController extends Controller
                 'note' => 'Report submitted.',
             ]);
 
+            // The picked category decides which employee owns the report.
+            app(ReportAssignmentService::class)->assignFromCategory($report, $category, $user);
+
             return $report;
         });
 
-        $report->load(['category', 'area', 'agency', 'user', 'images']);
+        $report->load(['category', 'area', 'agency', 'user', 'images', 'assignedEmployee']);
 
         // Refresh the public website statistics after a new report is submitted.
         app(WebsiteStatsService::class)->refresh();
@@ -156,9 +160,30 @@ class ReportController extends Controller
     {
         $this->authorize('update', $report);
 
-        $report->update($request->validated());
+        $data = $request->validated();
 
-        $report->load(['category', 'area', 'agency', 'user', 'images']);
+        // Changing the category moves the report to that category's agency,
+        // so it has to be handed over to that agency's responsible employee.
+        $categoryChanged = array_key_exists('category_id', $data)
+            && (int) $data['category_id'] !== $report->category_id;
+
+        $category = $categoryChanged ? Category::findOrFail($data['category_id']) : null;
+
+        DB::transaction(function () use ($report, $data, $category, $request) {
+            if ($category) {
+                $data['agency_id'] = $category->agency_id;
+                $data['assigned_employee_id'] = null;
+            }
+
+            $report->update($data);
+
+            if ($category) {
+                app(ReportAssignmentService::class)
+                    ->assignFromCategory($report, $category, $request->user());
+            }
+        });
+
+        $report->load(['category', 'area', 'agency', 'user', 'images', 'assignedEmployee']);
 
         return $this->success(new ReportResource($report), 'Report updated successfully.');
     }

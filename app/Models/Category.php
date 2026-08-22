@@ -22,6 +22,7 @@ class Category extends Model
         'name',
         'description',
         'agency_id',
+        'responsible_employee_id',
         'is_active',
     ];
 
@@ -40,6 +41,14 @@ class Category extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
+    }
+
+    /**
+     * The employee that reports in this category are automatically assigned to.
+     */
+    public function responsibleEmployee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_employee_id');
     }
 
     public function reports(): HasMany
