@@ -20,6 +20,7 @@ This document lists **every endpoint** in the Baladna API, with the **HTTP metho
 | `GET /areas` no longer returns pending/rejected areas, and `GET /areas/{area}` 404s for them | Nothing to do — the public list is just correct now. |
 | `area_id` on report create/update must be an **approved** area | Bind report forms to `/areas` or `/user-areas`, never to the suggestions endpoints. |
 | `PATCH /reports/{report}` with a new `category_id` also changes `agency_id` and `assigned_employee` | Re-read the report from the response instead of merging fields locally. |
+| **New** `GET /notifications`, `GET /notifications/unread-count`, `POST /notifications/read` | Build the in-app notification bell — see section 3.2. |
 | `DELETE /admin/areas/{area}` returns **422** (instead of crashing) when the area is still in use | Show `response.data.message` to the admin. |
 
 ---
@@ -749,6 +750,113 @@ const res = await api.get(`/reports/${id}/history`);
 ```js
 const res = await api.post(`/reports/${id}/review`, { rating, comment });
 ```
+
+---
+
+# 3.2 🔔 Notifications
+
+The in-app notification feed. There is **no notifications table** — the feed is
+the report status history read from the recipient's side, so every event the
+backend already records shows up here automatically.
+
+**You receive an event when it touches a report you filed, or a report assigned
+to you.** Events you triggered yourself are filtered out — you do not get
+notified about your own actions.
+
+All three endpoints require `auth:sanctum`. Any role can call them.
+
+## GET `/notifications`
+
+**Query params:** `per_page` (default 15, max 50), `page`, `unread_only` (`1`/`true`).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 42,
+      "type": "report_status_changed",
+      "old_status": "submitted",
+      "new_status": "under_review",
+      "note": "Taking a look now.",
+      "report": {
+        "id": 7,
+        "reference_number": "BLD-2026-000007",
+        "title": "Broken street light",
+        "status": "under_review"
+      },
+      "actor": { "id": 3, "name": "Ahmed" },
+      "is_read": false,
+      "created_at": "2026-08-23T10:12:00.000000Z"
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 15,
+    "total": 1,
+    "last_page": 1,
+    "unread_count": 1
+  }
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `type` | `report_created`, `report_assigned`, or `report_status_changed`. Pick the wording and icon from this. |
+| `note` | Free text from the backend — the resolution note, rejection reason, or the auto-assignment explanation. May be `null`. |
+| `actor` | Who caused it. **`null` when the platform itself did** (auto-assignment on an anonymous report, for example). |
+| `is_read` | Derived from the read watermark, not stored per row. |
+| `meta.unread_count` | Always the total unread count, even when the page is filtered. |
+
+**React example:**
+```js
+const res = await api.get('/notifications', { params: { per_page: 20 } });
+const items = res.data.data;
+const badge = res.data.meta.unread_count;
+```
+
+---
+
+## GET `/notifications/unread-count`
+Just the badge number — cheap enough to poll.
+
+**Response:**
+```json
+{ "success": true, "message": "Success.", "data": { "unread_count": 3 } }
+```
+
+```js
+const res = await api.get('/notifications/unread-count');
+setBadge(res.data.data.unread_count);
+```
+
+---
+
+## POST `/notifications/read`
+Marks **everything up to now** as read. No body. There is no per-item read
+state — the backend stores one `notifications_read_at` watermark per user, so
+the badge is consistent across the user's devices.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Notifications marked as read.",
+  "data": { "notifications_read_at": "2026-08-23T10:30:00.000000Z", "unread_count": 0 }
+}
+```
+
+```js
+await api.post('/notifications/read');
+setBadge(0);
+```
+
+> Items already read stay in the feed with `"is_read": true`. Use
+> `?unread_only=1` when you want only the new ones.
+
+**Not covered yet:** community events (comments on your post) and area-suggestion
+approvals are not in this feed — see `GET /my-area-suggestions` for the latter.
 
 ---
 

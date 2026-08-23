@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\EmployeeAreaSuggestionController;
 use App\Http\Controllers\Api\V1\EmployeeReportController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\UserAreaController;
@@ -93,6 +94,18 @@ Route::prefix('v1')->group(function () {
         Route::get('/reports/{report}/history', [ReportController::class, 'history']);
 
         Route::post('/reports/{report}/review', [ReportController::class, 'review']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications (in-app feed, derived from report status history)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/read', [NotificationController::class, 'markRead']);
     });
 
     /*

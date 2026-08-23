@@ -23,3 +23,21 @@ Steps from approved plan:
       extra cases in `UserAreaSuggestionTest`)
 - [x] 11. Update `API_REFERENCE.md`
 - [ ] 12. Run `php artisan migrate` and `php artisan test` (no PHP runtime in the WSL shell — run on the Windows side)
+
+---
+
+# TODO - In-app notification feed
+
+- [x] 1. Add `users.notifications_read_at` (single read watermark, no notifications table)
+- [x] 2. `ReportStatusHistory::forRecipient()` / `unreadFor()` scopes
+- [x] 3. `NotificationResource` (types the row as `report_created` / `report_assigned` /
+      `report_status_changed`, derives `is_read`)
+- [x] 4. `NotificationController` + routes: `GET /notifications`,
+      `GET /notifications/unread-count`, `POST /notifications/read`
+- [x] 5. Feature tests (`NotificationFeedTest`)
+- [x] 6. Update `API_REFERENCE.md` (new section 3.2)
+- [ ] 7. Run `php artisan migrate` and `php artisan test` (still no PHP runtime in the
+      WSL shell - run on the Windows side)
+
+Not covered by the feed yet: community events (comments on your post) and
+area-suggestion approvals.
