@@ -224,9 +224,29 @@ localStorage.removeItem("token");
 {
   "success": true,
   "message": "Authenticated user.",
-  "data": { "id": 1, "name": "Mohammad Ahmad", "email": "citizen@baladna.test", "phone": "+9647000000000", "role": "citizen" }
+  "data": {
+    "id": 1,
+    "name": "Mohammad Ahmad",
+    "email": "citizen@baladna.test",
+    "phone": "+9647000000000",
+    "role": "citizen",
+    "is_active": true,
+    "area_id": 3,
+    "agency_id": null,
+    "area": {
+      "id": 3,
+      "name": "Karrada",
+      "parent_id": 1,
+      "parent": { "id": 1, "name": "Baghdad" }
+    },
+    "agency": null,
+    "created_at": "2026-08-05T10:00:00.000000Z"
+  }
 }
 ```
+
+`area` is set for citizens (`null` when they have not picked one); `agency` is set for
+employees/agency admins. Both are always present in the payload.
 
 **React example:**
 ```js

@@ -32,6 +32,8 @@ class AuthController extends Controller
             'role' => Role::Citizen,
         ]);
 
+        $user->load('area.parent', 'agency');
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return $this->success([
@@ -54,6 +56,8 @@ class AuthController extends Controller
         if (! $user->is_active) {
             return $this->error('Your account has been deactivated.', 403);
         }
+
+        $user->load('area.parent', 'agency');
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -78,7 +82,9 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        return $this->success(new UserResource($request->user()), 'Authenticated user.');
+        $user = $request->user()->load('area.parent', 'agency');
+
+        return $this->success(new UserResource($user), 'Authenticated user.');
     }
 
     /**
@@ -95,6 +101,8 @@ class AuthController extends Controller
         }
 
         $user->save();
+
+        $user->load('area.parent', 'agency');
 
         return $this->success(new UserResource($user), 'Profile updated successfully.');
     }
